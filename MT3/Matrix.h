@@ -4,8 +4,67 @@
 #include<Vector3.h>
 #include <assert.h>
 #include<cmath>
-#include <math.h>
+
 #define N 4 //逆行列を求める行列の行数・列数 
+#include <math.h>
+#define _USE_MATH_DEFINES
+
+// 加算
+Vector3 Add(const Vector3& v1, const Vector3& v2) {
+	Vector3 result;
+	result.x = v1.x + v2.x;
+	result.y = v1.y + v2.y;
+	result.z = v1.z + v2.z;
+	return result;
+}
+// 減算
+Vector3 Subtract(const Vector3& v1, const Vector3& v2) {
+	Vector3 result;
+	result.x = v1.x - v2.x;
+	result.y = v1.y - v2.y;
+	result.z = v1.z - v2.z;
+	return result;
+}
+// スカラー倍
+Vector3 Multiply(float scalar, const Vector3& v) {
+	Vector3 result;
+	result.x = v.x * scalar;
+	result.y = v.y * scalar;
+	result.z = v.z * scalar;
+	return result;
+}
+// 内積
+float Dot(const Vector3& v1, const Vector3& v2) {
+	float result;
+	result = (v1.x * v2.x) + (v1.y * v2.y) + (v1.z * v2.z);
+	return result;
+}
+// 長さ（ノルム）
+float Length(const Vector3& v) {
+	float result;
+	result = float(sqrt((v.x * v.x) + (v.y * v.y) + (v.z * v.z)));
+	return result;
+}
+// 正規化
+Vector3 Normalize(const Vector3& v) {
+	Vector3 result;
+	result.x = float(v.x / sqrt((v.x * v.x) + (v.y * v.y) + (v.z * v.z)));
+	result.y = float(v.y / sqrt((v.x * v.x) + (v.y * v.y) + (v.z * v.z)));
+	result.z = float(v.z / sqrt((v.x * v.x) + (v.y * v.y) + (v.z * v.z)));
+
+	return result;
+}
+// ベクトルの大きさの2乗を計算する関数
+float MagnitudeSquared(const Vector3& v) {
+	return v.x * v.x + v.y * v.y + v.z * v.z;
+}
+// ベクトル間の距離を計算する関数
+float Distance(const Vector3& a, const Vector3& b) {
+	float dx = b.x - a.x;
+	float dy = b.y - a.y;
+	float dz = b.z - a.z;
+	return std::sqrt(dx * dx + dy * dy + dz * dz);
+}
 int check(double mat[N][N], double inv[N][N]) {
 
 	double inner_product;
@@ -49,13 +108,15 @@ Matrix4x4 Subtract(const Matrix4x4& m1, const Matrix4x4& m2) {
 	}
 	return result;
 }
+/*
 Vector3 Subtract(const Vector3& v1, const Vector3& v2) {
 	Vector3 result;
 	result.x = v1.x - v2.x;
-	result.y = v1.y - v2.y;
+	result.y= v1.y - v2.y;
 	result.z = v1.z - v2.z;
 	return result;
 }
+*/
 // 転置行列
 Matrix4x4 Transpose(const Matrix4x4& m) {
 	Matrix4x4 result = { 0 };
@@ -416,8 +477,11 @@ Vector3 Cross(const Vector3& v1, const Vector3& v2) {
 	result.z = (v1.x * v2.y) - (v1.y * v2.x);
 	return result;
 }
-float Dot(const Vector3& v1, const Vector3& v2) {
+/*
+float Dot(const Vector3& v1,const Vector3& v2 ) {
 	float result;
-	result = (v1.x * v2.x) + (v1.y * v2.y) + (v1.z * v2.z);
+	result = (v1.x * v2.x) + (v1.y * v2.y)+ (v1.z * v2.z);
 	return result;
 }
+*/
+
