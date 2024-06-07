@@ -477,11 +477,5 @@ Vector3 Cross(const Vector3& v1, const Vector3& v2) {
 	result.z = (v1.x * v2.y) - (v1.y * v2.x);
 	return result;
 }
-/*
-float Dot(const Vector3& v1,const Vector3& v2 ) {
-	float result;
-	result = (v1.x * v2.x) + (v1.y * v2.y)+ (v1.z * v2.z);
-	return result;
-}
-*/
+
 
