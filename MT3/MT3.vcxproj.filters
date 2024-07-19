@@ -112,5 +112,7 @@
       <Filter>KamataEngine\Include</Filter>
     </ClInclude>
     <ClInclude Include="Matrix.h" />
+    <ClInclude Include="Debug.h" />
+    <ClInclude Include="Vector2Int.h" />
   </ItemGroup>
 </Project>
