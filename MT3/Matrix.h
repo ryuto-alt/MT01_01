@@ -645,3 +645,38 @@ bool IsCollision(const AABB& a, const AABB& b) {
 	}
 	return false;
 }
+
+Vector3 CatmullRom(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float t) {
+	float t2 = t * t;
+	float t3 = t2 * t;
+
+	return  ((p1*2.0f) +
+		(-p0 + p2) * t +
+		(p0*2.0f  - p1*5.0f   + p2*4.0f  - p3) * t2 +
+		(-p0 +p1* 3.0f - p2*3.0f  + p3) * t3)* 0.5f;
+}
+
+void DrawCatmullRom(const Vector3& controlPoint0, const Vector3& controlPoint1, const Vector3& controlPoint2,
+	const Vector3& controlPoint3, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
+	const int segments = 100;
+	Vector3 previousPoint = controlPoint1;
+
+	for (int i = 1; i <= segments; ++i) {
+		float t = i / (float)segments;
+		Vector3 point = CatmullRom(controlPoint0, controlPoint1, controlPoint2, controlPoint3, t);
+		Vector3 transformedPrev = Transform(previousPoint, viewProjectionMatrix);
+		transformedPrev = Transform(transformedPrev, viewportMatrix);
+		Vector3 transformedCurrent = Transform(point, viewProjectionMatrix);
+		transformedCurrent = Transform(transformedCurrent, viewportMatrix);
+
+		Novice::DrawLine(
+			static_cast<int>(transformedPrev.x),
+			static_cast<int>(transformedPrev.y),
+			static_cast<int>(transformedCurrent.x),
+			static_cast<int>(transformedCurrent.y),
+			color
+		);
+
+		previousPoint = point;
+	}
+}
