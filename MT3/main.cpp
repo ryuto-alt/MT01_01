@@ -7,7 +7,20 @@
 const char kWindowTitle[] = "LE2C_05_ウノ_リュウト";
 int kWindowWidth = 1280;
 int kWindowHeight = 720;
-
+// 円運動の設定
+const float radius = 0.8f; // 半径
+const float angularSpeed = 3.14f; // 角速度 (ラジアン/秒)
+const float deltaTime = 1.0f / 60.0f; // 時間の増分 (秒)
+Vector3 pointP = { radius, 0.0f, 0.0f }; // 初期位置 (x = 半径, y = 0)
+Vector3 center = { 0.0f,0.0f,0.0f };
+float angle = 0.0f; // 初期角度
+// 等速円運動の計算
+void updatePosition(float deltaTimes) {
+	angle += angularSpeed * deltaTimes;
+	pointP.x = radius * cos(angle) + center.x;
+	pointP.y = radius * sin(angle) + center.x;
+	pointP.z = 0.0f; // z座標は0で固定 (2D円運動)
+}
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
@@ -20,22 +33,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	static bool isDebugCamera = false;
 	Vector2Int mouse;
 
-	Spring spring{};
-	spring.anchor = { 0.0f,1.0f,0.0f };
-	spring.naturalLength = 0.7f;
-	spring.stiffness = 100.0f;
-	spring.dampingCoefficient = 2.0f;
-
-	Ball ball{};
-	ball.position = { 0.8f,0.2f,0.0f };
-	ball.mass = 2.0f;
-	ball.radius = 0.05f;
-	ball.color = BLUE;
-	ball.velocity = 0.01f;
+	//float angularVelocity = 3.14f;
+	//float angle = 0.0f;
 	bool move = false;
 	Sphere sphere{};
-	float deltaTime = 1.0f / 60.0f;
-	const Vector3 kGravity = { 0.0f,-9.8f,0.0f };
+	sphere.radius = 0.05f;
 	// キー入力結果を受け取る箱
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
@@ -63,29 +65,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Matrix4x4 ViewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
 		if (move) {
-			Vector3 diff = ball.position - spring.anchor;
-			float length = Length(diff);
-			if (length != 0.0f) {
-				Vector3 direction = Normalize(diff);
-				Vector3 restPosition = spring.anchor + direction * spring.naturalLength;
-				Vector3 displacement = length * (ball.position - restPosition);
-				Vector3 restoringForce = -spring.stiffness * displacement;
-				Vector3 dampingForce = -spring.dampingCoefficient * ball.velocity;
-				Vector3 gravityForce = kGravity * ball.mass;
-				Vector3 force = restoringForce + dampingForce + gravityForce;
-				ball.acceleration = force / ball.mass;
-
-			}
-			ball.velocity += ball.acceleration * deltaTime;
-			ball.position += ball.velocity * deltaTime;
-
+			updatePosition(deltaTime);
 		}
-		sphere.center = ball.position;
-		sphere.radius = ball.radius;
-		Vector3 transformedPrev = Transform(sphere.center, ViewProjectionMatrix);
-		transformedPrev = Transform(transformedPrev, viewportMatrix);
-		Vector3 transformedPrev1 = Transform(spring.anchor, ViewProjectionMatrix);
-		transformedPrev1 = Transform(transformedPrev1, viewportMatrix);
+		sphere.center = pointP;
 		///
 		/// ↑更新処理ここまで
 		///
@@ -95,9 +77,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 
 		ImGui::Begin("Camera");
-		ImGui::DragFloat3("CTranslate", &cameraTranslate.x, 0.01f);
-		ImGui::DragFloat3("CRotate", &cameraRotate.x, 0.01f);
-		ImGui::DragFloat3("CPosition", &cameraPosition.x, 0.01f);
+		ImGui::DragFloat3("CameraTranslate", &cameraTranslate.x, 0.01f);
+		ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
+		ImGui::DragFloat3("CameraPosition", &cameraPosition.x, 0.01f);
 		ImGui::End();
 
 		ImGui::Begin("Window");
@@ -107,9 +89,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		}
 
 		ImGui::End();
-		Novice::DrawLine(static_cast<int>(transformedPrev.x), static_cast<int>(transformedPrev.y),
-			static_cast<int>(transformedPrev1.x), static_cast<int>(transformedPrev1.y), WHITE);
-		DrawSphere(sphere, ViewProjectionMatrix, viewportMatrix, ball.color);
+		DrawSphere(sphere, ViewProjectionMatrix, viewportMatrix, WHITE);
 		DrawGrid(ViewProjectionMatrix, viewportMatrix);
 		///
 		/// ↑描画処理ここまで
