@@ -22,12 +22,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	float deltaTime = 1.0f / 60.0f;
 
-	Pendulum pendulum;
-	pendulum.anchor = { 0.0f,1.0f,0.0f };
-	pendulum.length = 0.8f;
-	pendulum.angle = 0.7f;
-	pendulum.angularVelocity = 0.0f;
-	pendulum.angularAcceleration = 0.0f;
+	ConicalPendulum conicalPendulum;
+	conicalPendulum.anchor = { 0.0f,1.0f,0.0f };
+	conicalPendulum.length = 0.8f;
+	conicalPendulum.halfApexAngle = 0.7f;
+	conicalPendulum.angle = 0.0f;
+	conicalPendulum.angularVelocity = 0.0f;
 
 	Vector3 p{};
 
@@ -60,20 +60,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Matrix4x4 ViewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
 		if (move) {
-			pendulum.angularAcceleration =
-				-(9.8f / pendulum.length) * std::sin(pendulum.angle);
-			pendulum.angularVelocity += pendulum.angularAcceleration * deltaTime;
-			pendulum.angle += pendulum.angularVelocity * deltaTime;
+			conicalPendulum.angularVelocity = std::sqrt(9.8f / (conicalPendulum.length * std::cos(conicalPendulum.halfApexAngle)));
+			conicalPendulum.angle += conicalPendulum.angularVelocity * deltaTime;
 
-			p.x = pendulum.anchor.x + std::sin(pendulum.angle) * pendulum.length;
-			p.y = pendulum.anchor.y - std::cos(pendulum.angle) * pendulum.length;
-			p.z = pendulum.anchor.z;
+			float radius = std::sin(conicalPendulum.halfApexAngle) * conicalPendulum.length;
+			float height = std::cos(conicalPendulum.halfApexAngle) * conicalPendulum.length;
+			p.x = conicalPendulum.anchor.x + std::cos(conicalPendulum.angle) * radius;
+			p.y = conicalPendulum.anchor.y - height;
+			p.z = conicalPendulum.anchor.z - std::sin(conicalPendulum.angle) * radius;
 		}
 		sphere.center = p;
 		sphere.radius = 0.05f;
 		Vector3 transformedPrev = Transform(p, ViewProjectionMatrix);
 		transformedPrev = Transform(transformedPrev, viewportMatrix);
-		Vector3 transformedPrev1 = Transform(pendulum.anchor, ViewProjectionMatrix);
+		Vector3 transformedPrev1 = Transform(conicalPendulum.anchor, ViewProjectionMatrix);
 		transformedPrev1 = Transform(transformedPrev1, viewportMatrix);
 		///
 		/// ↑更新処理ここまで
