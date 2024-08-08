@@ -17,17 +17,25 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector3 cameraTranslate{ 0.0f, 1.9f, -6.49f };
 	Vector3 cameraRotate{ 0.26f, 0.0f, 0.0f };
 	Vector3 cameraPosition{ 0.0f, 1.0f, -5.0f };
-
-	Vector3 constrolPoints[4] = {
-		{-0.8f,0.58f,1.0f},
-		{1.76f,1.0f,-0.3f},
-		{0.94f,-0.7f,2.3f},
-		{-0.53f,-0.26f,-0.15f}
-	};
-
 	static bool isDebugCamera = false;
-	Vector3 rotate{ 0.0f,0.0f,0.0f };
 	Vector2Int mouse;
+
+	Spring spring{};
+	spring.anchor = { 0.0f,1.0f,0.0f };
+	spring.naturalLength = 0.7f;
+	spring.stiffness = 100.0f;
+	spring.dampingCoefficient = 2.0f;
+
+	Ball ball{};
+	ball.position = { 0.8f,0.2f,0.0f };
+	ball.mass = 2.0f;
+	ball.radius = 0.05f;
+	ball.color = BLUE;
+	ball.velocity = 0.01f;
+	bool move = false;
+	Sphere sphere{};
+	float deltaTime = 1.0f / 60.0f;
+	const Vector3 kGravity = { 0.0f,-9.8f,0.0f };
 	// キー入力結果を受け取る箱
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
@@ -54,12 +62,30 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kWindowWidth) / float(kWindowHeight), 0.1f, 100.0f);
 		Matrix4x4 ViewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
-		// 回転行列を生成
-		Matrix4x4 rotateMatrix = Multiply(MakeRotateXMatrix(rotate.x), Multiply(MakeRotateYMatrix(rotate.y), MakeRotateZMatrix(rotate.z)));
+		if (move) {
+			Vector3 diff = ball.position - spring.anchor;
+			float length = Length(diff);
+			if (length != 0.0f) {
+				Vector3 direction = Normalize(diff);
+				Vector3 restPosition = spring.anchor + direction * spring.naturalLength;
+				Vector3 displacement = length * (ball.position - restPosition);
+				Vector3 restoringForce = -spring.stiffness * displacement;
+				Vector3 dampingForce = -spring.dampingCoefficient * ball.velocity;
+				Vector3 gravityForce = kGravity * ball.mass;
+				Vector3 force = restoringForce + dampingForce + gravityForce;
+				ball.acceleration = force / ball.mass;
 
+			}
+			ball.velocity += ball.acceleration * deltaTime;
+			ball.position += ball.velocity * deltaTime;
 
-
-
+		}
+		sphere.center = ball.position;
+		sphere.radius = ball.radius;
+		Vector3 transformedPrev = Transform(sphere.center, ViewProjectionMatrix);
+		transformedPrev = Transform(transformedPrev, viewportMatrix);
+		Vector3 transformedPrev1 = Transform(spring.anchor, ViewProjectionMatrix);
+		transformedPrev1 = Transform(transformedPrev1, viewportMatrix);
 		///
 		/// ↑更新処理ここまで
 		///
@@ -68,20 +94,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 
-		ImGui::Begin("Window");
+		ImGui::Begin("Camera");
 		ImGui::DragFloat3("CTranslate", &cameraTranslate.x, 0.01f);
 		ImGui::DragFloat3("CRotate", &cameraRotate.x, 0.01f);
 		ImGui::DragFloat3("CPosition", &cameraPosition.x, 0.01f);
-
-		ImGui::DragFloat3("Point0", &constrolPoints[0].x, 0.01f);
-		ImGui::DragFloat3("Point1", &constrolPoints[1].x, 0.01f);
-		ImGui::DragFloat3("Point2", &constrolPoints[2].x, 0.01f);
-		ImGui::DragFloat3("Point3", &constrolPoints[3].x, 0.01f);
-
 		ImGui::End();
 
+		ImGui::Begin("Window");
 
-		DrawCatmullRom(constrolPoints[0], constrolPoints[1], constrolPoints[2], constrolPoints[3], ViewProjectionMatrix, viewportMatrix, BLUE);
+		if (ImGui::Button("START")) {
+			move = true;
+		}
+
+		ImGui::End();
+		Novice::DrawLine(static_cast<int>(transformedPrev.x), static_cast<int>(transformedPrev.y),
+			static_cast<int>(transformedPrev1.x), static_cast<int>(transformedPrev1.y), WHITE);
+		DrawSphere(sphere, ViewProjectionMatrix, viewportMatrix, ball.color);
 		DrawGrid(ViewProjectionMatrix, viewportMatrix);
 		///
 		/// ↑描画処理ここまで
