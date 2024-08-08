@@ -696,6 +696,12 @@ Vector3 CatmullRom(const Vector3& p0, const Vector3& p1, const Vector3& p2, cons
 		(-p0 +p1* 3.0f - p2*3.0f  + p3) * t3)* 0.5f;
 }
 
+Vector3 Reflect(const Vector3& input, const Vector3& normal) {
+	Vector3 normalizedNormal = normal * (1.0f / sqrt(normal.Dot(normal))); // 正規化された法線ベクトル
+	float dotProduct = input.Dot(normalizedNormal);
+	return input - normalizedNormal * (2 * dotProduct);
+}
+
 void DrawCatmullRom(const Vector3& controlPoint0, const Vector3& controlPoint1, const Vector3& controlPoint2,
 	const Vector3& controlPoint3, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
 	const int segments = 100;

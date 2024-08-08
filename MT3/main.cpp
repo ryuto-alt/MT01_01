@@ -22,15 +22,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	float deltaTime = 1.0f / 60.0f;
 
-	ConicalPendulum conicalPendulum;
-	conicalPendulum.anchor = { 0.0f,1.0f,0.0f };
-	conicalPendulum.length = 0.8f;
-	conicalPendulum.halfApexAngle = 0.7f;
-	conicalPendulum.angle = 0.0f;
-	conicalPendulum.angularVelocity = 0.0f;
+	Plane plane;
+	plane.normal = Normalize({ -0.2f,0.9f,-0.3f });
+	plane.distance = 0.0f;
+
+	Ball ball{};
+	ball.position = { 0.8f,1.2f,0.3f };
+	ball.mass = 2.0f;
+	ball.radius = 0.05f;
+	ball.color = WHITE;
+	ball.acceleration = { 0.0f,-9.8f,0.0f };
 
 	Vector3 p{};
-
+	float e = 0.1f;
 	Sphere sphere{};
 	bool move = false;
 	// キー入力結果を受け取る箱
@@ -60,21 +64,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Matrix4x4 ViewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
 		if (move) {
-			conicalPendulum.angularVelocity = std::sqrt(9.8f / (conicalPendulum.length * std::cos(conicalPendulum.halfApexAngle)));
-			conicalPendulum.angle += conicalPendulum.angularVelocity * deltaTime;
-
-			float radius = std::sin(conicalPendulum.halfApexAngle) * conicalPendulum.length;
-			float height = std::cos(conicalPendulum.halfApexAngle) * conicalPendulum.length;
-			p.x = conicalPendulum.anchor.x + std::cos(conicalPendulum.angle) * radius;
-			p.y = conicalPendulum.anchor.y - height;
-			p.z = conicalPendulum.anchor.z - std::sin(conicalPendulum.angle) * radius;
+			ball.velocity += ball.acceleration * deltaTime;
+			ball.position += ball.velocity * deltaTime;
+			if (IsCollision(Sphere{ ball.position,ball.radius }, plane)) {
+				Vector3 reflected = Reflect(ball.velocity, plane.normal);
+				Vector3 projectToNormal = Project(reflected, plane.normal);
+				Vector3 movingDirection = reflected - projectToNormal;
+				ball.velocity = projectToNormal * e + movingDirection;
+			}
+			p.x = ball.position.x;
+			p.y = ball.position.y;
+			p.z = ball.position.z;
 		}
 		sphere.center = p;
 		sphere.radius = 0.05f;
 		Vector3 transformedPrev = Transform(p, ViewProjectionMatrix);
 		transformedPrev = Transform(transformedPrev, viewportMatrix);
-		Vector3 transformedPrev1 = Transform(conicalPendulum.anchor, ViewProjectionMatrix);
-		transformedPrev1 = Transform(transformedPrev1, viewportMatrix);
+
 		///
 		/// ↑更新処理ここまで
 		///
@@ -96,8 +102,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		}
 
 		ImGui::End();
-
-		Novice::DrawLine(static_cast<int>(transformedPrev.x), static_cast<int>(transformedPrev.y),static_cast<int>(transformedPrev1.x), static_cast<int>(transformedPrev1.y), WHITE);
+		DrawPlane(plane, ViewProjectionMatrix, viewportMatrix, WHITE);
 		DrawSphere(sphere, ViewProjectionMatrix, viewportMatrix, WHITE);
 		DrawGrid(ViewProjectionMatrix, viewportMatrix);
 		///
