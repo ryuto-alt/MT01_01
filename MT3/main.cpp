@@ -43,16 +43,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// ライブラリの初期化
 	Novice::Initialize(kWindowTitle, 1280, 720);
-
-	Vector3 axis = Normalize({ 1.0f,1.0f,1.0f });
-	float angle = 0.44f;
-	Matrix4x4 rotateMatrix = MakeRotateAxisAngle(axis, angle);
-
 	Vector3 cameraTranslate{ 0.0f, 1.9f, -6.49f };
 	Vector3 cameraRotate{ 0.26f, 0.0f, 0.0f };
 	Vector3 cameraPosition{ 0.0f, 1.0f, -5.0f };
 	static bool isDebugCamera = false;
 	Vector2Int mouse;
+	Vector3 from0 = Normalize(Vector3{ 1.0f,0.7f,0.5f });
+	Vector3 to0 = -from0;
+	Vector3 from1 = Normalize(Vector3{ -0.6f,0.9f,0.2f });
+	Vector3 to1 = Normalize(Vector3{ 0.4f,0.7f,-0.5f });
+	Matrix4x4 rotateMatrix0 = DirectionToDirection(
+		Normalize(Vector3{ 1.0f,0.0f,0.0f }), Normalize(Vector3{ -1.0f, 0.0f, 0.0f }));
+	Matrix4x4 rotateMatrix1 = DirectionToDirection(from0, to0);
+	Matrix4x4 rotateMatrix2 = DirectionToDirection(from1, to1);
+
+
 
 	// キー入力結果を受け取る箱
 	char keys[256] = { 0 };
@@ -71,6 +76,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓更新処理ここから
 		///
 
+		if (keys[DIK_C] && preKeys[DIK_C] == 0) {
+			isDebugCamera = !isDebugCamera;
+		}
 		CameraMove(cameraRotate, cameraTranslate, mouse, isDebugCamera);
 		Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, cameraRotate, Add(cameraPosition, cameraTranslate));
 		Matrix4x4 viewMatrix = Inverse(cameraMatrix);
@@ -78,11 +86,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Matrix4x4 ViewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
 
-		if (keys[DIK_C] && preKeys[DIK_C] == 0) {
-			isDebugCamera = !isDebugCamera;
-		}
-
-		MatrixScreenPrintf(0, 0, rotateMatrix);
+		MatrixScreenPrintf(0, 0, rotateMatrix0);
+		MatrixScreenPrintf(0, kRowHeight * 5, rotateMatrix1);
+		MatrixScreenPrintf(0, kRowHeight * 10, rotateMatrix2);
 		///
 		/// ↑更新処理ここまで
 		///
@@ -90,15 +96,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓描画処理ここから
 		///
-		/// 
-		/// 
+		DrawGrid(ViewProjectionMatrix, viewportMatrix);
 
 		ImGui::Begin("CameraView");
 		ImGui::DragFloat3("CameraTranslate", &cameraTranslate.x, 0.01f);
 		ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
 		ImGui::DragFloat3("CameraPosition", &cameraPosition.x, 0.01f);
 		ImGui::End();
-		DrawGrid(ViewProjectionMatrix, viewportMatrix);
+
 		///
 		/// ↑描画処理ここまで
 		///

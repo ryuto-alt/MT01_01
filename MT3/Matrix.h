@@ -1061,3 +1061,24 @@ Matrix4x4 MakeRotateAxisAngle(const Vector3& axis, float angle) {
 
 	return rotateMatrix;
 }
+Matrix4x4 DirectionToDirection(const Vector3& from, const Vector3& to) {
+	Matrix4x4 rotateMatrix = { 0.0f };
+	Vector3 n = Normalize(Cross(from, to));
+	if (from.x == -to.x && from.y == -to.y && from.z == -to.z) {
+		if (from.x != 0.0f || from.y != 0.0f) {
+			n = Vector3{ from.y,-from.x,0.0f };
+		}
+		else if (from.x != 0.0f || from.z != 0.0f) {
+			n = Vector3{ from.z,0.0f,-from.x };
+		}
+	}
+	float cosTheta = Dot(from, to);
+	float sinTheta = Length(Cross(from, to));
+	rotateMatrix = {
+		(n.x * n.x) * (1 - cosTheta) + cosTheta,(n.x * n.y) * (1 - cosTheta) + (n.z * sinTheta),(n.x * n.z) * (1 - cosTheta) - (n.y * sinTheta),0.0f,
+		(n.x * n.y) * (1 - cosTheta) - (n.z * sinTheta),(n.y * n.y) * (1 - cosTheta) + cosTheta,(n.y * n.z) * (1 - cosTheta) + (n.x * sinTheta),0.0f,
+		(n.x * n.z) * (1 - cosTheta) + (n.y * sinTheta),(n.y * n.z) * (1 - cosTheta) - (n.x * sinTheta),(n.z * n.z) * (1 - cosTheta) + cosTheta,0.0f,
+		0.0f,0.0f,0.0f,1.0f
+	};
+	return rotateMatrix;
+}
