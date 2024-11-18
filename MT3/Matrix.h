@@ -1082,3 +1082,55 @@ Matrix4x4 DirectionToDirection(const Vector3& from, const Vector3& to) {
 	};
 	return rotateMatrix;
 }
+
+struct Quaternion {
+	float x;
+	float y;
+	float z;
+	float w;
+};
+// Quaternionの積
+Quaternion Multiply(const Quaternion& lhs, const Quaternion& rhs) {
+	return {
+		lhs.w * rhs.x + lhs.x * rhs.w + lhs.y * rhs.z - lhs.z * rhs.y,
+		lhs.w * rhs.y - lhs.x * rhs.z + lhs.y * rhs.w + lhs.z * rhs.x,
+		lhs.w * rhs.z + lhs.x * rhs.y - lhs.y * rhs.x + lhs.z * rhs.w,
+		lhs.w * rhs.w - lhs.x * rhs.x - lhs.y * rhs.y - lhs.z * rhs.z
+	};
+}
+
+// 単位Quaternionを返す
+Quaternion IdentityQuaternion() {
+	return { 0.0f, 0.0f, 0.0f, 1.0f };
+}
+// 共役Quaternionを返す
+Quaternion Conjugate(const Quaternion& quaternion) {
+	return { -quaternion.x, -quaternion.y, -quaternion.z, quaternion.w };
+}
+// Quaternionのnormを返す
+float Norm(const Quaternion& quaternion) {
+	return std::sqrt(quaternion.x * quaternion.x +
+		quaternion.y * quaternion.y +
+		quaternion.z * quaternion.z +
+		quaternion.w * quaternion.w);
+}
+// 正規化したQuaternionを返す
+Quaternion Normalize(const Quaternion& quaternion) {
+	float norm = Norm(quaternion);
+	if (norm == 0.0f) {
+		return { 0.0f, 0.0f, 0.0f, 1.0f };
+	}
+	return { quaternion.x / norm, quaternion.y / norm, quaternion.z / norm, quaternion.w / norm };
+
+}
+// 逆Quaternionを返す
+Quaternion Inverse(const Quaternion& quaternion) {
+	Quaternion conjugate = Conjugate(quaternion);
+	float norm = Norm(quaternion);
+	float normSq = norm * norm;
+	if (normSq == 0.0f) {
+		return { 0.0f, 0.0f, 0.0f, 1.0f };
+	}
+	return { conjugate.x / normSq, conjugate.y / normSq, conjugate.z / normSq, conjugate.w / normSq };
+
+}
