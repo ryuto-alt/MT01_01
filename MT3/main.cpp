@@ -99,6 +99,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 
+
 		ImGui::Begin("CameraView");
 		ImGui::DragFloat3("Translate", &cameraTranslate.x, 0.01f);
 		ImGui::DragFloat3("Rotate", &cameraRotate.x, 0.01f);

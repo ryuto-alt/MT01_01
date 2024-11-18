@@ -1099,6 +1099,7 @@ Quaternion Multiply(const Quaternion& lhs, const Quaternion& rhs) {
 	};
 }
 
+
 // 単位Quaternionを返す
 Quaternion IdentityQuaternion() {
 	return { 0.0f, 0.0f, 0.0f, 1.0f };
