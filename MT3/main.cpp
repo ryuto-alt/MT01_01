@@ -7,8 +7,6 @@
 const char kWindowTitle[] = "LE2C_03_ウノ_リュウト";
 int kWindowWidth = 1280;
 int kWindowHeight = 720;
-
-
 void UpdateBall(Ball& ball, const Plane& plane, float deltaTime, float e) {
 	// 速度と位置を更新
 	ball.velocity += ball.acceleration * deltaTime;
@@ -52,15 +50,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//float deltaTime = 1.0f / 60.0f;
 
 
-	Quaternion q1 = { 2.0f,3.0f,4.0f,1.0f };
-	Quaternion q2 = { 1.0f,3.0f,5.0f,2.0f };
-	Quaternion identity = IdentityQuaternion();
-	Quaternion conj = Conjugate(q1);
-	Quaternion inv = Inverse(q1);
-	Quaternion normal = Normalize(q1);
-	Quaternion mul1 = Multiply(q1, q2);
-	Quaternion mul2 = Multiply(q2, q1);
-	float norm = Norm(q1);
+	Quaternion rotation = MakeRotateAxisAngleQuaternion(
+		Normalize(Vector3{ 1.0f,0.4f,-0.2f }), 0.45f);
+	Vector3 pointY = { 2.1f,-0.9f,1.3f };
+	Matrix4x4 rotateMatrix = MakeRotateMatrix(rotation);
+	Vector3 rotateByQuaternion = RotateVector(pointY, rotation);
+	Vector3 rotateByMatrix = Transform(pointY, rotateMatrix);
 
 	// キー入力結果を受け取る箱
 	char keys[256] = { 0 };
@@ -89,8 +84,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Matrix4x4 ViewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
 
-		Novice::ScreenPrintf(0, 0, "%6.02f  %6.02f  %6.02f  %6.02f", identity.x, identity.y, identity.z, identity.w);
-		Novice::ScreenPrintf(0, kRowHeight * 5, "%6.02f", norm);
+
+
 		///
 		/// ↑更新処理ここまで
 		///
@@ -99,11 +94,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 
-
-		ImGui::Begin("CameraView");
-		ImGui::DragFloat3("Translate", &cameraTranslate.x, 0.01f);
-		ImGui::DragFloat3("Rotate", &cameraRotate.x, 0.01f);
-		ImGui::DragFloat3("Position", &cameraPosition.x, 0.01f);
+		ImGui::Begin("Camera");
+		ImGui::DragFloat3("CameraTranslate", &cameraTranslate.x, 0.01f);
+		ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
+		ImGui::DragFloat3("CameraPosition", &cameraPosition.x, 0.01f);
 		ImGui::End();
 
 

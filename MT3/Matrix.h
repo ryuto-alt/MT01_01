@@ -1135,3 +1135,57 @@ Quaternion Inverse(const Quaternion& quaternion) {
 	return { conjugate.x / normSq, conjugate.y / normSq, conjugate.z / normSq, conjugate.w / normSq };
 
 }
+// 任意軸回転を表すQuaternionの生成
+Quaternion MakeRotateAxisAngleQuaternion(
+	const Vector3& axis, float angle) {
+	Vector3 normAxis = Normalize(axis);
+	float sinHalfAngle = std::sin(angle / 2.0f);
+	float cosHalfAngle = std::cos(angle / 2.0f);
+	return { normAxis.x * sinHalfAngle, normAxis.y * sinHalfAngle, normAxis.z * sinHalfAngle, cosHalfAngle };
+}
+// ベクトルをQuaternionで回転させたけっかのベクトルを求める
+Vector3 RotateVector(const Vector3& vector, const Quaternion&
+	quaternion) {
+	Quaternion qVector = { vector.x, vector.y, vector.z, 0.0f };
+	Quaternion qConjugate = { -quaternion.x, -quaternion.y, -quaternion.z, quaternion.w };
+	Quaternion qResult = Multiply(Multiply(quaternion, qVector), qConjugate);
+	return { qResult.x, qResult.y, qResult.z };
+}
+// Quaternionから回転行列を求める
+Matrix4x4 MakeRotateMatrix(const Quaternion& quaternion) {
+	Matrix4x4 matrix = {};
+
+	float xx = quaternion.x * quaternion.x;
+	float yy = quaternion.y * quaternion.y;
+	float zz = quaternion.z * quaternion.z;
+	float xy = quaternion.x * quaternion.y;
+	float xz = quaternion.x * quaternion.z;
+	float yz = quaternion.y * quaternion.z;
+	float wx = quaternion.w * quaternion.x;
+	float wy = quaternion.w * quaternion.y;
+	float wz = quaternion.w * quaternion.z;
+
+	matrix.m[0][0] = 1.0f - 2.0f * (yy + zz);
+	matrix.m[0][1] = 2.0f * (xy - wz);
+	matrix.m[0][2] = 2.0f * (xz + wy);
+	matrix.m[0][3] = 0.0f;
+
+	matrix.m[1][0] = 2.0f * (xy + wz);
+	matrix.m[1][1] = 1.0f - 2.0f * (xx + zz);
+	matrix.m[1][2] = 2.0f * (yz - wx);
+	matrix.m[1][3] = 0.0f;
+
+	matrix.m[2][0] = 2.0f * (xz - wy);
+	matrix.m[2][1] = 2.0f * (yz + wx);
+	matrix.m[2][2] = 1.0f - 2.0f * (xx + yy);
+	matrix.m[2][3] = 0.0f;
+
+	matrix.m[3][0] = 0.0f;
+	matrix.m[3][1] = 0.0f;
+	matrix.m[3][2] = 0.0f;
+	matrix.m[3][3] = 1.0f;
+
+	matrix = Transpose(matrix);
+
+	return matrix;
+}
