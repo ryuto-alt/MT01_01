@@ -1189,3 +1189,51 @@ Matrix4x4 MakeRotateMatrix(const Quaternion& quaternion) {
 
 	return matrix;
 }
+
+// クォータニオンの内積を計算
+float Dot(const Quaternion& q0, const Quaternion& q1) {
+	return q0.x * q1.x + q0.y * q1.y + q0.z * q1.z + q0.w * q1.w;
+}
+
+// 球面線形補間
+Quaternion Slerp(const Quaternion& q0, const Quaternion& q1, float t) {
+	// クォータニオンの内積を計算
+	float dot = Dot(q0, q1);
+
+	// クォータニオンが反対向きの場合、内積が負になるので符号を反転
+	const float THRESHOLD = 0.9995f;
+	if (dot < 0.0f) {
+		dot = -dot;
+		Quaternion negQ1 = { -q1.x, -q1.y, -q1.z, -q1.w };
+		return Slerp(q0, negQ1, t);
+	}
+
+	// 内積が閾値以上の場合、線形補間を使用
+	if (dot > THRESHOLD) {
+		Quaternion result = {
+			q0.x + t * (q1.x - q0.x),
+			q0.y + t * (q1.y - q0.y),
+			q0.z + t * (q1.z - q0.z),
+			q0.w + t * (q1.w - q0.w)
+		};
+		// 正規化
+		float norm = std::sqrt(result.x * result.x + result.y * result.y + result.z * result.z + result.w * result.w);
+		return { result.x / norm, result.y / norm, result.z / norm, result.w / norm };
+	}
+
+	// 角度を計算
+	float theta_0 = std::acos(dot);  // θ0 = angle between input vectors
+	float theta = theta_0 * t;       // θ = angle between q0 and result
+	float sin_theta = std::sin(theta); // Compute this value only once
+	float sin_theta_0 = std::sin(theta_0); // Compute this value only once
+
+	float s0 = std::cos(theta) - dot * sin_theta / sin_theta_0;  // s0 = sin((1 - t) * theta) / sin(theta)
+	float s1 = sin_theta / sin_theta_0; // s1 = sin(t * theta) / sin(theta)
+
+	return {
+		s0 * q0.x + s1 * q1.x,
+		s0 * q0.y + s1 * q1.y,
+		s0 * q0.z + s1 * q1.z,
+		s0 * q0.w + s1 * q1.w
+	};
+}
